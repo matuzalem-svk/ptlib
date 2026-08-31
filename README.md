@@ -1,19 +1,23 @@
 # ptlib - parsing and traslation library
-**Author:** Matúš Sabol
 
 ## Implementation intent
-Efficient generation of LR parsers, translators and lexers from EBNF-like grammar definition.
+Generation of LR parsers, translators and lexers from EBNF-like grammar definition.
+
 Author's exercise in formal language theory, modern C++23 usage and compile-time computation, project (self-)management.
 
 ## Usage intent
 Author's exercise in formal language theory application.
+
 For any actual production use, please strongly consider [boost::spirit](https://github.com/boostorg/spirit) or [Spirit.X4](https://github.com/boostorg/spirit_x4) instead.
 
 ## Source litarature
 Aho, A. V.; Lam, M. S.; Sethi, R.; Ullman, J. D.: *Compilers: Principles, Techniques, and Tools, Second Edition*, Pearson Education Limited, 2014, ISBN 972-1-292-02434-9
 
+Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, https://github.com/MarioGalindoQ/Modern-CPP-Design-Patterns
+
 ## State of the project
 ### Current state
+- header-only
 - naive API for specifying grammars powering automatic parser generation
 - runtime SLR parser generation
 - placeholder `std::regex`-based lexer
@@ -36,6 +40,7 @@ Aho, A. V.; Lam, M. S.; Sethi, R.; Ullman, J. D.: *Compilers: Principles, Techni
     - should be able to leverage modern C++ features such as `std::string_view` for efficient string manipulation
 - semantic action binding to production rules
 - grammar symbol operator overloads to be able to write grammars in EBNF-like form (see `boost::spirit`)
+- simplified user setup - singular front-end class used to construct grammars and encapsulate execution
 #### Optional, but nice to have
 - proper testing framework, e.g. gTest + unit test suite
 - compile-time lexer/parser generation
