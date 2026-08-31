@@ -14,20 +14,20 @@
 
 #pragma once
 
+#include "lexer/ilexer.h"
 #include "common/types.h"
-#include <set>
 #include <map>
 #include <regex>
-#include <string_view>
 #include <iostream>
 #include <iomanip>
 
 namespace ptlib { namespace lexer {
 
-class RegexLexer
+class RegexLexer : public ILexerImpl
 {
 public:
     RegexLexer()
+    : currentSymbol(nullptr)
     {
         eofSymbol = new common::SymbolEOF();
     }
@@ -45,20 +45,32 @@ public:
         symbolRegexList.clear();
     }
 
-    void AddTerminalRegex(const char* inName, const char* inRegex)
+    virtual bool Initialize(const common::Grammar& inGrammar) override
     {
-        symbolRegexList.push_back({inName, std::regex(inRegex)});
+        for (const auto* s : inGrammar.symbols)
+        {
+            if (!s->IsTerminal()) continue;
+
+            symbolRegexList.push_back({s->name, std::regex(s->value)});
+        }
+
+        return true;
     }
 
-    void SetInput(const char* inputString)
+    virtual void SetInput(std::string inputString) override
     {
-        input = inputString;
+        input = std::move(inputString);
         inputPos = 0;
 
         std::cout << "lexer input: " << std::quoted(input) << std::endl;
     }
 
-    const common::Symbol* GetNextToken()
+    virtual const common::Symbol* GetToken() const override
+    {
+        return currentSymbol;
+    }
+
+    virtual void NextToken() override
     {
         buffer.clear();
 
@@ -71,18 +83,19 @@ public:
             bBeforeMatching = bCurrentMatching;
             bCurrentMatching = false;
 
-            if (inputPos == strlen(input))
+            if (inputPos == input.size())
             {
-                return eofSymbol;
+                currentSymbol = eofSymbol;
+                return;
             }
 
-            if (inputPos + bufferViewSize > strlen(input))
+            if (inputPos + bufferViewSize > input.size())
             {
-                buffer = std::string(input + inputPos);
+                buffer = std::string(input.data() + inputPos);
                 goto found_lexeme;
             }
 
-            buffer = std::string(input + inputPos, bufferViewSize);
+            buffer = std::string(input.data() + inputPos, bufferViewSize);
 
             std::cout << "lexer buffer (" << inputPos << ", " << bufferViewSize << "): " << std::quoted(buffer) << std::endl;
             std::cout << buffer.data() << std::endl;
@@ -142,15 +155,18 @@ found_lexeme:
             out = s;
         }
 
-        return out;
+        currentSymbol = out;
+
+        return;
     }
 
 private:
     std::vector<std::pair<const char*, std::regex>> symbolRegexList;
 
-    const char* input;
+    std::string input;
     size_t inputPos;
     std::string buffer;
+    const common::Symbol* currentSymbol;
     std::set<const common::Symbol*> symbolTable;
     common::Symbol* eofSymbol;
 }; // class RegexLexer

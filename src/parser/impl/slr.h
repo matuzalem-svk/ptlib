@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "parser/iparser.h"
 #include "common/types.h"
 #include "common/utility.h"
 #include <iomanip>
@@ -27,54 +28,13 @@ namespace ptlib { namespace parser {
 
 using namespace ptlib::common;
 
-struct ParseStepResult
-{
-    bool actionSuccess;
-    bool requireNextToken;
-    bool parseSuccess;
-};
-
-typedef std::map<const Symbol*, std::set<const Symbol*>> SymbolSetMap;
-
-enum ParseActionType
-{
-    PARSE_SHIFT,
-    PARSE_REDUCE,
-    PARSE_GOTO,
-    PARSE_ACCEPT
-};
-
-struct ParseAction
-{
-    ParseActionType actionType;
-    size_t parameter;
-
-    bool operator==(const ParseAction& other)
-    {
-        return actionType == other.actionType && parameter == other.parameter;
-    }
-};
-
-typedef std::map<std::tuple<LRStateID, const Symbol*>, ParseAction> ParseTableMap;
-
-typedef std::pair<LRStateID, const Symbol*> GOTOKey;
-typedef std::map<GOTOKey, size_t> ParseGotoMap;
-
-class SLRParser
+class SLRParser : public IParserImpl
 {
 public:
     SLRParser() {}
     SLRParser(const Grammar& grammar)
     {
-        ParseGotoMap GOTO;
-        auto collection = GenerateCanonicalSymbolCollection(grammar, GOTO);
-
-        auto FIRST = GENERATE_FIRST(grammar);
-        auto FOLLOW = GENERATE_FOLLOW(grammar, FIRST);
-
-        PARSE_TABLE = GenerateParseTable(grammar, collection, FOLLOW, GOTO);
-
-        // DEBUG
+        /*
         std::cout << "GRAMMAR PRODUCTIONS" << std::endl;
         utility::printGrammarProductions(grammar);
         std::cout << std::endl;
@@ -151,17 +111,30 @@ public:
             std::cout << "} ";
         }
         std::cout << std::endl;
+        */
     }
 
-    void ResetParse()
+    virtual bool Initialize(const common::Grammar& grammar) override
+    {
+        ParseGotoMap GOTO;
+        auto collection = GenerateCanonicalSymbolCollection(grammar, GOTO);
+
+        auto FIRST = GENERATE_FIRST(grammar);
+        auto FOLLOW = GENERATE_FOLLOW(grammar, FIRST);
+
+        PARSE_TABLE = GenerateParseTable(grammar, collection, FOLLOW, GOTO);
+
+        return !PARSE_TABLE.empty();
+    }
+
+    virtual void ResetParse() override
     {
         while (!PARSE_STACK.empty()) PARSE_STACK.pop();
 
         PARSE_STACK.push(0);
     }
 
-    // <successful parse action, require next symbol, complete parsing success>
-    ParseStepResult StepParse(const Grammar& grammar, const Symbol* token)
+    virtual ParseStepResult StepParse(const Symbol* token) override
     {
         const LRStateID& topState = PARSE_STACK.top();
 
@@ -200,22 +173,15 @@ public:
             break;
             case PARSE_REDUCE:
             {
-                const Production& prod = grammar.productions[action.parameter];
+                std::cout << "r" << action.parameter << " - reduce " << action.parameter << std::endl;
 
-                std::cout << "r" << action.parameter << " - reduce " << prod.first->name << " -> ";
-                for (const auto* s : prod.second)
-                {
-                    std::cout << s->name << " ";
-                }
-                std::cout << std::endl;
-
-                for (size_t j = 0; j < prod.second.size(); ++j)
+                for (size_t j = 0; j < action.reduceAmount; ++j)
                 {
                     PARSE_STACK.pop();
                 }
 
                 const LRStateID& newTopState = PARSE_STACK.top();
-                auto gotoIt = PARSE_TABLE.find({ newTopState, prod.first });
+                auto gotoIt = PARSE_TABLE.find({ newTopState, action.reduceGotoNonterm });
                 if (gotoIt == PARSE_TABLE.end() || gotoIt->second.actionType != PARSE_GOTO)
                 {
                     std::cout << "EXPECTED GOTO ACTION!!!" << std::endl;
@@ -442,9 +408,20 @@ protected:
         return FOLLOW;
     }
 
+    inline bool TryAddParseTableAction(ParseTableMap& PARSE_TABLE, std::tuple<LRStateID, const common::Symbol*> parseKey, const ParseAction& newParseAction) const
+    {
+        auto parseTableIt = PARSE_TABLE.find(parseKey);
+        if (parseTableIt != PARSE_TABLE.end()) return false;
+
+        PARSE_TABLE[parseKey] = newParseAction;
+
+        return true;
+    }
+
     ParseTableMap GenerateParseTable(const Grammar& inGrammar, const LRItemSetCollection& inCanonicalCollection, const SymbolSetMap& FOLLOW, const ParseGotoMap& GOTO) const
     {
         ParseTableMap PARSE_TABLE;
+        ParseTableMap empty;
 
         for (size_t i = 0; i < inCanonicalCollection.size(); ++i)
         {
@@ -461,7 +438,7 @@ protected:
                     // [S' -> S.] means ACTION[i, EOF] = ACCEPT
                     if (prod.first == inGrammar.augmentedStartNonterminal)
                     {
-                        PARSE_TABLE[{ i, inGrammar.eofTerminal }] = { .actionType = PARSE_ACCEPT };
+                        if (!TryAddParseTableAction(PARSE_TABLE, {i, inGrammar.eofTerminal }, { .actionType = PARSE_ACCEPT })) return empty;
                         continue;
                     }
 
@@ -469,7 +446,13 @@ protected:
                     auto followIt = FOLLOW.find(prod.first); // TODO sanity check
                     for (const Symbol* followTerminal : followIt->second)
                     {
-                        PARSE_TABLE[{ i, followTerminal }] = { .actionType = PARSE_REDUCE, .parameter = prodId };
+                        if (!TryAddParseTableAction(PARSE_TABLE, { i, followTerminal }, 
+                            { 
+                                .actionType = PARSE_REDUCE, 
+                                .parameter = prodId, 
+                                .reduceAmount = prod.second.size(), 
+                                .reduceGotoNonterm = prod.first 
+                            })) return empty;
                     }
 
                     continue;
@@ -481,7 +464,7 @@ protected:
 
                 auto gotoIt = GOTO.find({ i, nextSymbol }); // TODO sanity check
 
-                PARSE_TABLE[{ i, nextSymbol }] = ParseAction{ .actionType = PARSE_SHIFT, .parameter = gotoIt->second };
+                if (!TryAddParseTableAction(PARSE_TABLE, { i, nextSymbol }, { .actionType = PARSE_SHIFT, .parameter = gotoIt->second })) return empty;
             }
 
             for (const Symbol* nterm : inGrammar.symbols)
@@ -491,7 +474,7 @@ protected:
                 auto findIt = GOTO.find({i, nterm});
                 if (findIt == GOTO.end()) continue;
 
-                PARSE_TABLE[{ i, nterm }] = ParseAction{ .actionType = PARSE_GOTO, .parameter = findIt->second };
+                if (!TryAddParseTableAction(PARSE_TABLE, { i, nterm }, { .actionType = PARSE_GOTO, .parameter = findIt->second })) return empty;
             }
         }
 

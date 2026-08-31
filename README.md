@@ -31,8 +31,6 @@ Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, http
     - whitespace skipping
     - explicit multiline input parsing support
     - ignored input regexes (e.g. comments)
-- parsing table rule collision detection during parser construction
-    - *reason:* the user needs to know they specified a non-LR(1) grammar
 - runtime LALR parser generation
     - *reason:* more powerful parser than SLR with similar memory footprint
 - custom lexer generation

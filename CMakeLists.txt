@@ -13,7 +13,9 @@ target_sources(ptlib
     PUBLIC
         src/common/types.h
         src/common/utility.h
-        src/lexer/regexlexer.h
+        src/lexer/ilexer.h
+        src/lexer/impl/regexlexer.h
+        src/parser/iparser.h
         src/parser/impl/slr.h
         src/parser/parser.h
         src/ptlib.h

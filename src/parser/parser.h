@@ -12,47 +12,56 @@
 // OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT 
 // OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include "parser/impl/slr.h"
-#include "lexer/regexlexer.h"
-
 #pragma once
+
+#include "parser/iparser.h"
+#include "parser/impl/slr.h"
+#include "lexer/ilexer.h"
+#include "lexer/impl/regexlexer.h"
 
 namespace ptlib 
 {
+using namespace common;
 using namespace parser;
 using namespace lexer;
 
+template <class ParserImplClassT = SLRParser, class LexerImplClassT = RegexLexer>
 class Parser
 {
 public:
-    Parser(const ptlib::parser::Grammar& inGrammar)
-    : grammar(inGrammar)
+    Parser(const Grammar& inGrammar)
+    : grammar(inGrammar), bParserInitialized(false)
     {
-        for (const auto* s : grammar.symbols)
-        {
-            if (!s->IsTerminal()) continue;
+        static_assert(std::is_base_of<ILexerImpl, LexerImplClassT>::value, "Lexer class does not implement common ILexer interface.");
+        static_assert(std::is_base_of<IParserImpl, ParserImplClassT>::value, "Parser class does not implement common IParser interface.");
 
-            lexer.AddTerminalRegex(s->name, s->value);
-        }
+        lexer.Initialize(grammar);
 
         grammar.AugmentGrammar();
-        parser = ptlib::parser::SLRParser(grammar);
+        bParserInitialized = parser.Initialize(grammar);
     }
 
     bool Parse(const char* input)
     {
+        if (!bParserInitialized)
+        {
+            std::cout << "PARSER INITIALIZATION FAILED" << std::endl;
+            return false;
+        }
+
         lexer.SetInput(input);
         parser.ResetParse();
 
-        const ptlib::common::Symbol* token = lexer.GetNextToken();
-        ptlib::parser::ParseStepResult stepResult;
+        lexer.NextToken();
+        ParseStepResult stepResult;
 
         do
         {
-            stepResult = parser.StepParse(grammar, token);
+            const Symbol* token = lexer.GetToken();
+            stepResult = parser.StepParse(token);
             if (stepResult.requireNextToken)
             {
-                token = lexer.GetNextToken();
+                lexer.NextToken();
             }
 
             if (stepResult.actionSuccess && stepResult.parseSuccess)
@@ -67,9 +76,10 @@ public:
     }
 
 protected:
-    ptlib::common::Grammar grammar;
-    ptlib::lexer::RegexLexer lexer;
-    ptlib::parser::SLRParser parser;
-}; // class LexerParser
+    Grammar grammar;
+    LexerImplClassT lexer;
+    ParserImplClassT parser;
+    bool bParserInitialized;
+}; // class Parser
 
 } // namespace ptlib
