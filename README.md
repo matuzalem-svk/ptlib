@@ -3,7 +3,7 @@
 
 ## Implementation intent
 Efficient generation of LR parsers, translators and lexers from EBNF-like grammar definition.
-Author's exercise in formal language theory, modern C++ usage and compile-time computation, project (self-)management.
+Author's exercise in formal language theory, modern C++23 usage and compile-time computation, project (self-)management.
 
 ## Usage intent
 Author's exercise in formal language theory application.
@@ -23,6 +23,10 @@ Aho, A. V.; Lam, M. S.; Sethi, R.; Ullman, J. D.: *Compilers: Principles, Techni
 - tidied-up architecture
 - operator overloads for ptlib types for simplifying logging and manipulation
 - standalone symbol table shared across lexer and parser
+- lexer improvements
+    - whitespace skipping
+    - explicit multiline input parsing support
+    - ignored input regexes (e.g. comments)
 - parsing table rule collision detection during parser construction
     - *reason:* the user needs to know they specified a non-LR(1) grammar
 - runtime LALR parser generation
