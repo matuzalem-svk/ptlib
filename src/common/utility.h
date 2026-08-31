@@ -18,7 +18,48 @@
 
 namespace ptlib { namespace utility {
 
-void printGrammarProductions(const common::Grammar& grammar);
-void printLRItemSet(const common::Grammar& grammar, const common::LRItemSet& itemSet);
+void printGrammarProductions(const common::Grammar& grammar)
+{
+    for (const auto& p : grammar.productions)
+    {
+        std::cout << p.first->value << " -> ";
+
+        for (const auto& s : p.second)
+        {
+            std::cout << s->value << "(" << (s->IsTerminal()?"T":"NT") << ") ";
+        }
+
+        std::cout << std::endl;
+    }
+}
+
+void printLRItemSet(const common::Grammar& grammar, const common::LRItemSet& itemSet)
+{
+    for (const auto& item : itemSet)
+    {
+        ptlib::common::Production p = grammar.productions[item.first];
+
+        std::cout << p.first->value << " -> ";
+
+        bool dotPrinted = false;
+        for (int i = 0; i < p.second.size(); ++i)
+        {
+            if (i == item.second)
+            {
+                std::cout << ". ";
+                dotPrinted = true;
+            }
+
+            std::cout << p.second[i]->value << "(" << (p.second[i]->IsTerminal()?"T":"NT") << ") ";
+        }
+
+        if (!dotPrinted)
+        {
+            std::cout << ".";
+        }
+
+        std::cout << std::endl;
+    }
+}
 
 } } // namespace ptlib::utility
