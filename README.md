@@ -10,7 +10,7 @@ Author's exercise in formal language theory application.
 
 For any actual production use, please strongly consider [boost::spirit](https://github.com/boostorg/spirit) or [Spirit.X4](https://github.com/boostorg/spirit_x4) instead.
 
-## Source litarature
+## Source literature
 Aho, A. V.; Lam, M. S.; Sethi, R.; Ullman, J. D.: *Compilers: Principles, Techniques, and Tools, Second Edition*, Pearson Education Limited, 2014, ISBN 972-1-292-02434-9
 
 Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, https://github.com/MarioGalindoQ/Modern-CPP-Design-Patterns
