@@ -22,5 +22,8 @@ target_sources(ptlib
 )
 
 add_executable(ptlibtest)
+target_include_directories(ptlibtest
+    PUBLIC
+        src
+)
 target_sources(ptlibtest PRIVATE src/test/test.cpp)
-target_link_libraries(ptlibtest ptlib)
