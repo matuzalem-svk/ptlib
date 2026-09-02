@@ -20,13 +20,13 @@ Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, http
 - header-only
 - naive API for specifying grammars powering automatic parser generation
 - runtime SLR parser generation
+- standalone symbol table shared across lexer and parser
 - placeholder `std::regex`-based lexer
 - naive testing "playground"
 ### Things to be done
 #### Mandatory
 - tidied-up architecture
 - operator overloads for ptlib types for simplifying logging and manipulation
-- standalone symbol table shared across lexer and parser
 - lexer improvements
     - whitespace skipping
     - explicit multiline input parsing support

@@ -16,6 +16,7 @@
 
 #include "lexer/ilexer.h"
 #include "common/types.h"
+#include "common/symboltable.h"
 #include <map>
 #include <regex>
 #include <iostream>
@@ -29,19 +30,10 @@ public:
     RegexLexer()
     : currentSymbol(nullptr)
     {
-        eofSymbol = new common::SymbolEOF();
     }
 
     ~RegexLexer()
     {
-        for (const common::Symbol* s : symbolTable)
-        {
-            delete s;
-        }
-
-        delete eofSymbol;
-
-        symbolTable.clear();
         symbolRegexList.clear();
     }
 
@@ -85,7 +77,7 @@ public:
 
             if (inputPos == input.size())
             {
-                currentSymbol = eofSymbol;
+                currentSymbol = common::SymbolTable::GetInstance().GetEOFSymbol();
                 return;
             }
 
@@ -142,19 +134,7 @@ found_lexeme:
         std::cout << "lexeme(" << std::quoted(tokenName) << ", " << std::quoted(buffer.data()) << ")" << std::endl;
 
         // TODO really need to make this work with string views, will require either a custom regex implementation or some wrapper around std::regex
-        // Symbol value will be garbage by the time next symbol is created
-        const common::Symbol* out = new common::SymbolTerminal(tokenName, buffer.data());
-        if (!symbolTable.contains(out))
-        {
-            symbolTable.insert(out);
-        }
-        else
-        {
-            const common::Symbol* s = *(symbolTable.find(out));
-            delete out;
-            out = s;
-        }
-
+        const common::Symbol* out = common::SymbolTable::GetInstance().InsertSymbol<common::SymbolTerminal>(tokenName, buffer.data());
         currentSymbol = out;
 
         return;
@@ -167,8 +147,6 @@ private:
     size_t inputPos;
     std::string buffer;
     const common::Symbol* currentSymbol;
-    std::set<const common::Symbol*> symbolTable;
-    common::Symbol* eofSymbol;
 }; // class RegexLexer
 
 

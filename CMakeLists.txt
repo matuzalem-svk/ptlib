@@ -11,6 +11,7 @@ target_include_directories(ptlib
 )
 target_sources(ptlib
     PUBLIC
+        src/common/symboltable.h
         src/common/types.h
         src/common/utility.h
         src/lexer/ilexer.h
