@@ -25,8 +25,6 @@ class SymbolTable
 public:
     SymbolTable()
     {
-        eofSymbol = InsertSymbol<SymbolEOF>("EOF", "");
-        emptySymbol = InsertSymbol<SymbolEmpty>("empty", "");
     }
 
     SymbolTable(const SymbolTable&) = delete;
@@ -81,12 +79,14 @@ public:
 
     const Symbol* GetEOFSymbol() const
     {
-        return eofSymbol;
+        static SymbolEOF eofSymbol;
+        return &eofSymbol;
     }
 
     const Symbol* GetEmptySymbol() const
     {
-        return emptySymbol;
+        static SymbolEmpty emptySymbol;
+        return &emptySymbol;
     }
 
 protected:
@@ -110,8 +110,6 @@ protected:
 protected:
     std::set<std::string> strings;
     std::set<const Symbol*> symbols;
-    const Symbol* eofSymbol;
-    const Symbol* emptySymbol;
 }; // class SymbolTable
 
 } } // namespace ptlib::common
