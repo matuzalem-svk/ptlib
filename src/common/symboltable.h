@@ -81,6 +81,8 @@ public:
     {
         static SymbolEOF eofSymbol;
         return &eofSymbol;
+        static SymbolEOF eofSymbol;
+        return &eofSymbol;
     }
 
     const Symbol* GetEmptySymbol() const
