@@ -25,8 +25,6 @@ class SymbolTable
 public:
     SymbolTable()
     {
-        eofSymbol = InsertSymbol<SymbolEOF>("EOF", "");
-        emptySymbol = InsertSymbol<SymbolEmpty>("empty", "");
     }
 
     SymbolTable(const SymbolTable&) = delete;
@@ -59,7 +57,7 @@ public:
 
         strings.insert(value);
         
-        const Symbol* out = _insertSymbolImpl<SymbolT>(name, value);
+        const Symbol* out = new SymbolT(name, value);
         if (!symbols.contains(out))
         {
             symbols.insert(out);
@@ -81,37 +79,19 @@ public:
 
     const Symbol* GetEOFSymbol() const
     {
-        return eofSymbol;
+        static SymbolEOF eofSymbol;
+        return &eofSymbol;
     }
 
     const Symbol* GetEmptySymbol() const
     {
-        return emptySymbol;
-    }
-
-protected:
-    template <class SymbolT>
-    const Symbol* _insertSymbolImpl(const char* name, const char* value) const
-    {
-        if constexpr (std::is_same_v<SymbolEOF, SymbolT>)
-        {
-            return new SymbolEOF();
-        }
-        else if constexpr (std::is_same_v<SymbolEmpty, SymbolT>)
-        {
-            return new SymbolEmpty();
-        }
-        else
-        {
-            return new SymbolT(name, value);
-        }
+        static SymbolEmpty emptySymbol;
+        return &emptySymbol;
     }
 
 protected:
     std::set<std::string> strings;
     std::set<const Symbol*> symbols;
-    const Symbol* eofSymbol;
-    const Symbol* emptySymbol;
 }; // class SymbolTable
 
 } } // namespace ptlib::common

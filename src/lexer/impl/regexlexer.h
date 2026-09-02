@@ -78,6 +78,7 @@ public:
             if (inputPos == input.size())
             {
                 currentSymbol = common::SymbolTable::GetInstance().GetEOFSymbol();
+                std::cout << "lexeme(EOF)" << std::endl;
                 return;
             }
 
