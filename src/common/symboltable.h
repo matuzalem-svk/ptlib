@@ -14,7 +14,8 @@
 
 #pragma once
 
-#include "common/types.h"
+#include "common/symbols.h"
+#include <string>
 #include <set>
 
 namespace ptlib { namespace common {
@@ -56,8 +57,17 @@ public:
         static_assert(std::is_base_of<Symbol, SymbolT>::value, "InsertSymbol() template class must be a subtype of Symbol!");
 
         strings.insert(value);
-        
-        const Symbol* out = new SymbolT(name, value);
+
+        const Symbol* out = nullptr;
+        if constexpr (std::is_same_v<SymbolT, SymbolNonterminal>)
+        {
+            out = new SymbolNonterminal(name);
+        }
+        else
+        {
+            out = new SymbolT(name, value);
+        }
+
         if (!symbols.contains(out))
         {
             symbols.insert(out);
@@ -79,8 +89,6 @@ public:
 
     const Symbol* GetEOFSymbol() const
     {
-        static SymbolEOF eofSymbol;
-        return &eofSymbol;
         static SymbolEOF eofSymbol;
         return &eofSymbol;
     }

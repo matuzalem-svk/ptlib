@@ -15,6 +15,8 @@
 #pragma once
 
 #include "common/types.h"
+#include "common/grammar.h"
+#include <iostream>
 
 namespace ptlib { namespace utility {
 

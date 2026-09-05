@@ -11,6 +11,8 @@ target_include_directories(ptlib
 )
 target_sources(ptlib
     PUBLIC
+        src/common/grammar.h
+        src/common/symbols.h
         src/common/symboltable.h
         src/common/types.h
         src/common/utility.h

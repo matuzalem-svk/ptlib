@@ -15,8 +15,9 @@
 #pragma once
 
 #include "parser/iparser.h"
-#include "common/types.h"
 #include "common/utility.h"
+#include "common/types.h"
+#include "common/symboltable.h"
 #include <iomanip>
 #include <map>
 #include <vector>
@@ -331,16 +332,16 @@ protected:
 
                 if (prod.second.size() == 0) continue;
 
-                if (prod.second.size() == 1 && prod.second[0] == inGrammar.emptyTerminal)
+                if (prod.second.size() == 1 && prod.second[0] == common::SymbolTable::GetInstance().GetEmptySymbol())
                 {
-                    bAddedNewFirst |= FIRST[symbol].insert(inGrammar.emptyTerminal).second;
+                    bAddedNewFirst |= FIRST[symbol].insert(common::SymbolTable::GetInstance().GetEmptySymbol()).second;
                     continue;
                 }
 
                 for (const Symbol* tailSymbol : prod.second)
                 {
                     const auto& tailSymbolFirstSet = FIRST[tailSymbol];
-                    if (tailSymbolFirstSet.count(inGrammar.emptyTerminal)) continue;
+                    if (tailSymbolFirstSet.count(common::SymbolTable::GetInstance().GetEmptySymbol())) continue;
 
                     for (const Symbol* kokod : tailSymbolFirstSet)
                     {
@@ -359,7 +360,7 @@ protected:
     SymbolSetMap GENERATE_FOLLOW(const Grammar& inGrammar, const SymbolSetMap& FIRST) const
     {
         std::map<const Symbol*, std::set<const Symbol*>> FOLLOW;
-        FOLLOW.insert({ inGrammar.startNonterminal, { inGrammar.eofTerminal } });
+        FOLLOW.insert({ inGrammar.startNonterminal, { common::SymbolTable::GetInstance().GetEOFSymbol() } });
 
         for (const Symbol* symbol : inGrammar.symbols)
         {
@@ -385,7 +386,7 @@ protected:
                     if (tailSymbol->IsTerminal()) continue;
 
                     auto firstIt = FIRST.find(prod.second[i]); // TODO sanity check
-                    if (i == prod.second.size() - 1 || firstIt->second.count(inGrammar.emptyTerminal))
+                    if (i == prod.second.size() - 1 || firstIt->second.count(common::SymbolTable::GetInstance().GetEmptySymbol()))
                     {
                         for (const Symbol* kokodSymbol : FOLLOW[prod.first])
                         {
@@ -438,7 +439,7 @@ protected:
                     // [S' -> S.] means ACTION[i, EOF] = ACCEPT
                     if (prod.first == inGrammar.augmentedStartNonterminal)
                     {
-                        if (!TryAddParseTableAction(PARSE_TABLE, {i, inGrammar.eofTerminal }, { .actionType = PARSE_ACCEPT })) return empty;
+                        if (!TryAddParseTableAction(PARSE_TABLE, {i, common::SymbolTable::GetInstance().GetEOFSymbol() }, { .actionType = PARSE_ACCEPT })) return empty;
                         continue;
                     }
 
