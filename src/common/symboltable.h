@@ -17,6 +17,8 @@
 #include "common/symbols.h"
 #include <string>
 #include <set>
+#include <map>
+#include <memory>
 
 namespace ptlib { namespace common {
 
@@ -35,10 +37,6 @@ public:
 
     virtual ~SymbolTable()
     {
-        for (const Symbol* s : symbols)
-        {
-            delete s;
-        }
         symbols.clear();
         strings.clear();
     }
@@ -56,33 +54,31 @@ public:
     {
         static_assert(std::is_base_of<Symbol, SymbolT>::value, "InsertSymbol() template class must be a subtype of Symbol!");
 
-        strings.insert(value);
+        std::string symbolKey = Symbol::Serialize(name, value);
+        auto it = symbols.find(symbolKey);
 
         const Symbol* out = nullptr;
-        if constexpr (std::is_same_v<SymbolT, SymbolNonterminal>)
+        if (it == symbols.end())
         {
-            out = new SymbolNonterminal(name);
+            strings.insert(value);
+            if constexpr (std::is_same_v<SymbolT, SymbolNonterminal>)
+            {
+                out = symbols.insert({symbolKey, std::make_unique<SymbolNonterminal>(name)}).first->second.get();
+            }
+            else
+            {
+                out = symbols.insert({symbolKey, std::make_unique<SymbolT>(name, value)}).first->second.get();
+            }
         }
         else
         {
-            out = new SymbolT(name, value);
-        }
-
-        if (!symbols.contains(out))
-        {
-            symbols.insert(out);
-        }
-        else
-        {
-            const Symbol* s = *(symbols.find(out));
-            delete out;
-            out = s;
+            out = it->second.get();
         }
 
         return out;
     }
 
-    const std::set<const Symbol*> GetSymbols() const
+    const std::map<std::string, std::unique_ptr<Symbol>>& GetSymbols() const
     {
         return symbols;
     }
@@ -101,7 +97,7 @@ public:
 
 protected:
     std::set<std::string> strings;
-    std::set<const Symbol*> symbols;
+    std::map<std::string, std::unique_ptr<Symbol>> symbols;
 }; // class SymbolTable
 
 } } // namespace ptlib::common

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <string>
 #include <cstring>
 
 namespace ptlib { namespace common {
@@ -69,6 +70,21 @@ namespace ptlib { namespace common {
         bool operator==(const Symbol& other) const
         {
             return TypeEquals(&other) && ValueEquals(&other);
+        }
+
+        std::string Serialize() const
+        {
+            return Symbol::Serialize(name, value);
+        }
+
+        static std::string Serialize(const char* name, const char* value)
+        {
+            std::string out;
+
+            out += std::string(name)
+                +  std::string(value);
+
+            return out;
         }
 
         const char* name;
