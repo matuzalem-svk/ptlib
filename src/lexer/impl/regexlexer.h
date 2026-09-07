@@ -91,8 +91,7 @@ public:
 
             buffer = std::string(input.data() + inputPos, bufferViewSize);
 
-            ptlib_out << "lexer buffer (" << inputPos << ", " << bufferViewSize << "): " << std::quoted(buffer) << std::endl;
-            ptlib_out << buffer.data() << std::endl;
+            //ptlib_out << "lexer buffer (" << inputPos << ", " << bufferViewSize << "): " << std::quoted(buffer) << std::endl;
 
             for (auto [tokenName, tokenRegex] : symbolRegexList)
             {
@@ -113,7 +112,7 @@ public:
                 buffer = buffer.substr(0, buffer.size()-1);
 found_lexeme:
                 inputPos += bufferViewSize-1;
-                ptlib_out << "found lexeme " << std::quoted(buffer) << std::endl;
+                //ptlib_out << "found lexeme " << std::quoted(buffer) << std::endl;
                 break;
             }
         }

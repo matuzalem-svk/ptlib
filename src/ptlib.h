@@ -24,22 +24,26 @@
 namespace ptlib 
 {
 
-template <class ParserImplClassT = parser::SLRParser, class LexerImplClassT = lexer::RegexLexer>
+using namespace common;
+using namespace lexer;
+using namespace parser;
+
+template <class ParserImplClassT = SLRParser, class LexerImplClassT = RegexLexer>
 class Parser
 {
 public:
     Parser()
     : bParserInitialized(false)
     {
-        static_assert(std::is_base_of<lexer::ILexerImpl, LexerImplClassT>::value, "Lexer class does not implement common ILexer interface.");
-        static_assert(std::is_base_of<parser::IParserImpl, ParserImplClassT>::value, "Parser class does not implement common IParser interface.");
+        static_assert(std::is_base_of<ILexerImpl, LexerImplClassT>::value, "Lexer class does not implement common ILexer interface.");
+        static_assert(std::is_base_of<IParserImpl, ParserImplClassT>::value, "Parser class does not implement common IParser interface.");
     }
 
-    Parser(const common::Grammar& inGrammar)
+    Parser(const Grammar& inGrammar)
     : grammar(inGrammar), bParserInitialized(false)
     {
-        static_assert(std::is_base_of<lexer::ILexerImpl, LexerImplClassT>::value, "Lexer class does not implement common ILexer interface.");
-        static_assert(std::is_base_of<parser::IParserImpl, ParserImplClassT>::value, "Parser class does not implement common IParser interface.");
+        static_assert(std::is_base_of<ILexerImpl, LexerImplClassT>::value, "Lexer class does not implement common ILexer interface.");
+        static_assert(std::is_base_of<IParserImpl, ParserImplClassT>::value, "Parser class does not implement common IParser interface.");
 
         lexer.Initialize(grammar);
 
@@ -58,19 +62,19 @@ public:
         return bParserInitialized;
     }
 
-    const common::Symbol* AddNonterminal(const char* name, bool isStartNonterminal = false)
+    const SymbolNonterminal* AddNonterminal(const char* name, bool isStartNonterminal = false)
     {
-        return grammar.AddNonterminal(name, isStartNonterminal);
+        return dynamic_cast<const common::SymbolNonterminal*>(grammar.AddNonterminal(name, isStartNonterminal));
     }
 
-    const common::Symbol* AddTerminal(const char* name, const char* value)
+    const SymbolTerminal* AddTerminal(const char* name, const char* value)
     {
-        return grammar.AddTerminal(name, value);
+        return dynamic_cast<const common::SymbolTerminal*>(grammar.AddTerminal(name, value));
     }
 
-    void AddProduction(const common::Symbol* head, const std::vector<const common::Symbol*>& tail)
+    SymbolString& operator[](const common::SymbolNonterminal* head)
     {
-        grammar.AddProduction(head, tail);
+        return grammar[head];
     }
 
     bool Parse(const char* input)
@@ -89,11 +93,11 @@ public:
         parser.ResetParse();
 
         lexer.NextToken();
-        parser::ParseStepResult stepResult;
+        ParseStepResult stepResult;
 
         do
         {
-            const common::Symbol* token = lexer.GetToken();
+            const Symbol* token = lexer.GetToken();
             stepResult = parser.StepParse(token);
             if (stepResult.requireNextToken)
             {
@@ -102,7 +106,6 @@ public:
 
             if (stepResult.actionSuccess && stepResult.parseSuccess)
             {
-                ptlib_out << "PARSE SUCCESSFUL" << std::endl;
                 break;
             }
         }
@@ -112,7 +115,7 @@ public:
     }
 
 protected:
-    common::Grammar grammar;
+    Grammar grammar;
     LexerImplClassT lexer;
     ParserImplClassT parser;
     bool bParserInitialized;

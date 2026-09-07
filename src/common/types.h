@@ -14,10 +14,12 @@
 
 #pragma once
 
+#include "common/symbols.h"
 #include <vector>
 
 namespace ptlib::common {
 
+    typedef std::vector<const Symbol*> SymbolString;
     typedef size_t LRStateID;
     typedef std::pair<LRStateID, int> LRItem;
     typedef std::vector<LRItem> LRItemSet;

@@ -150,7 +150,7 @@ public:
         // no parsing action for state/symbol == error
         if (actionIt == PARSE_TABLE.end())
         {
-            ptlib_out << "PARSING FAILED!!!" << std::endl;
+            ptlib_out << "error" << std::endl;
             return { false, false, false };
         }
 
@@ -159,7 +159,7 @@ public:
         {
             case PARSE_ACCEPT:
             {
-                ptlib_out << "PARSING SUCCESSFUL!!!" << std::endl;
+                ptlib_out << "accept" << std::endl;
                 return { true, false, true };
             }
             break;

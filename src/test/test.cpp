@@ -13,12 +13,12 @@ int main()
     auto t_rpar_ = grammar.AddTerminal("t_rpar", "\\)");
     auto t_id_ = grammar.AddTerminal("t_id", "[A-Za-z]+");
 
-    grammar.AddProduction( expr_, { expr_, t_plus_, term_ } );
-    grammar.AddProduction( expr_, { term_ } );
-    grammar.AddProduction( term_, { term_, t_times_, factor_ } );
-    grammar.AddProduction( term_, { factor_ } );
-    grammar.AddProduction( factor_, { t_lpar_, expr_, t_rpar_ } );
-    grammar.AddProduction( factor_, { t_id_ } );
+    grammar[expr_] = { expr_, t_plus_, term_ };
+    grammar[expr_] = { term_ };
+    grammar[term_] = { term_, t_times_, factor_ };
+    grammar[term_] = { factor_ };
+    grammar[factor_] = { t_lpar_, expr_, t_rpar_ };
+    grammar[factor_] = { t_id_ };
 
     ptlib::Parser parser(grammar);*/
 
@@ -33,12 +33,12 @@ int main()
     auto t_rpar_ = parser.AddTerminal("t_rpar", "\\)");
     auto t_id_ = parser.AddTerminal("t_id", "[A-Za-z]+");
 
-    parser.AddProduction( expr_, { expr_, t_plus_, term_ } );
-    parser.AddProduction( expr_, { term_ } );
-    parser.AddProduction( term_, { term_, t_times_, factor_ } );
-    parser.AddProduction( term_, { factor_ } );
-    parser.AddProduction( factor_, { t_lpar_, expr_, t_rpar_ } );
-    parser.AddProduction( factor_, { t_id_ } );
+    parser[expr_] = { expr_, t_plus_, term_ };
+    parser[expr_] = { term_ };
+    parser[term_] = { term_, t_times_, factor_ };
+    parser[term_] = { factor_ };
+    parser[factor_] = { t_lpar_, expr_, t_rpar_ };
+    parser[factor_] = { t_id_ };
 
     parser.Parse("a+a*(bb+ccc)");
 

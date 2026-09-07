@@ -20,7 +20,7 @@
 
 namespace ptlib::common {
 
-    typedef std::pair<const Symbol*, std::vector<const Symbol*>> Production;
+    typedef std::pair<const SymbolNonterminal*, SymbolString> Production;
 
     struct Grammar
     {
@@ -59,10 +59,11 @@ namespace ptlib::common {
             return nt;
         }
 
-        void AddProduction(const Symbol* head, const std::vector<const Symbol*>& tail)
+        SymbolString& operator[](const SymbolNonterminal* head)
         {
-            Production p(head, tail);
+            Production p(head, {});
             productions.push_back(p);
+            return productions.back().second;
         }
 
         void AugmentGrammar()
