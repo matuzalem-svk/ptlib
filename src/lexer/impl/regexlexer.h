@@ -22,7 +22,7 @@
 #include <iostream>
 #include <iomanip>
 
-namespace ptlib { namespace lexer {
+namespace ptlib::lexer {
 
 class RegexLexer : public ILexerImpl
 {
@@ -151,4 +151,4 @@ private:
 }; // class RegexLexer
 
 
-} } // namespace ptlib::lexer
+} // namespace ptlib::lexer

@@ -20,7 +20,7 @@
 #include <map>
 #include <memory>
 
-namespace ptlib { namespace common {
+namespace ptlib::common {
 
 class SymbolTable
 {
@@ -100,4 +100,4 @@ protected:
     std::map<std::string, std::unique_ptr<Symbol>> symbols;
 }; // class SymbolTable
 
-} } // namespace ptlib::common
+} // namespace ptlib::common

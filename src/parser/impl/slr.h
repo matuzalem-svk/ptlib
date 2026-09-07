@@ -25,7 +25,7 @@
 #include <tuple>
 
 
-namespace ptlib { namespace parser {
+namespace ptlib::parser {
 
 using namespace ptlib::common;
 
@@ -487,4 +487,4 @@ protected:
     std::stack<LRStateID> PARSE_STACK;
 }; // class SLRParser
 
-} } // namespace ptlib::parser
+} // namespace ptlib::parser

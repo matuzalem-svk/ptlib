@@ -16,11 +16,11 @@
 
 #include <vector>
 
-namespace ptlib { namespace common {
+namespace ptlib::common {
 
     typedef size_t LRStateID;
     typedef std::pair<LRStateID, int> LRItem;
     typedef std::vector<LRItem> LRItemSet;
     typedef std::vector<LRItemSet> LRItemSetCollection;
 
-} } // namespace ptlib::common
+} // namespace ptlib::common

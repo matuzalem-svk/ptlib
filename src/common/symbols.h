@@ -15,9 +15,8 @@
 #pragma once
 
 #include <string>
-#include <cstring>
 
-namespace ptlib { namespace common {
+namespace ptlib::common {
 
     struct Symbol
     {
@@ -70,11 +69,6 @@ namespace ptlib { namespace common {
         bool operator==(const Symbol& other) const
         {
             return TypeEquals(&other) && ValueEquals(&other);
-        }
-
-        std::string Serialize() const
-        {
-            return Symbol::Serialize(name, value);
         }
 
         template<class SymbolT>
@@ -156,4 +150,4 @@ namespace ptlib { namespace common {
         }
     }; // struct SymbolNonterminal
 
-}} // namespace ptlib::common
+} // namespace ptlib::common

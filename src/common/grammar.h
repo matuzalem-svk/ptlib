@@ -17,7 +17,7 @@
 #include "common/symbols.h"
 #include "common/symboltable.h"
 
-namespace ptlib { namespace common {
+namespace ptlib::common {
 
     typedef std::pair<const Symbol*, std::vector<const Symbol*>> Production;
 
@@ -84,4 +84,4 @@ namespace ptlib { namespace common {
         bool bAugmented;
     }; // struct Grammar
 
-}}
+} // namespace ptlib::common

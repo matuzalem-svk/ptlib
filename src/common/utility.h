@@ -18,7 +18,7 @@
 #include "common/grammar.h"
 #include <iostream>
 
-namespace ptlib { namespace utility {
+namespace ptlib::utility {
 
 void printGrammarProductions(const common::Grammar& grammar)
 {
@@ -64,4 +64,4 @@ void printLRItemSet(const common::Grammar& grammar, const common::LRItemSet& ite
     }
 }
 
-} } // namespace ptlib::utility
+} // namespace ptlib::utility

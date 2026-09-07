@@ -16,7 +16,7 @@
 
 #include "common/types.h"
 
-namespace ptlib { namespace lexer {
+namespace ptlib::lexer {
 
 // common lexer implementation interface
 class ILexerImpl
@@ -28,4 +28,4 @@ public:
     virtual void NextToken() = 0;
 }; // class ILexerImpl
 
-} } // namespace ptlib::lexer
+} // namespace ptlib::lexer

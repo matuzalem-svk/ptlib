@@ -17,7 +17,7 @@
 #include "common/types.h"
 #include <map>
 
-namespace ptlib { namespace parser {
+namespace ptlib::parser {
 
 using namespace common;
 
@@ -68,4 +68,4 @@ public:
 
 }; // class IParserImpl
 
-} } // namespace ptlib::parser
+} // namespace ptlib::parser
