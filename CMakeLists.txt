@@ -20,7 +20,6 @@ target_sources(ptlib
         src/lexer/impl/regexlexer.h
         src/parser/iparser.h
         src/parser/impl/slr.h
-        src/parser/parser.h
         src/ptlib.h
 )
 
