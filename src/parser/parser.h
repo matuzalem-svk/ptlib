@@ -29,6 +29,13 @@ template <class ParserImplClassT = SLRParser, class LexerImplClassT = RegexLexer
 class Parser
 {
 public:
+    Parser()
+    : bParserInitialized(false)
+    {
+        static_assert(std::is_base_of<ILexerImpl, LexerImplClassT>::value, "Lexer class does not implement common ILexer interface.");
+        static_assert(std::is_base_of<IParserImpl, ParserImplClassT>::value, "Parser class does not implement common IParser interface.");
+    }
+
     Parser(const Grammar& inGrammar)
     : grammar(inGrammar), bParserInitialized(false)
     {
@@ -41,12 +48,42 @@ public:
         bParserInitialized = parser.Initialize(grammar);
     }
 
+    bool Initialize()
+    {
+        if (bParserInitialized) return true;
+
+        bParserInitialized |= lexer.Initialize(grammar);
+        grammar.AugmentGrammar();
+        bParserInitialized |= parser.Initialize(grammar);
+
+        return bParserInitialized;
+    }
+
+    const Symbol* AddNonterminal(const char* name, bool isStartNonterminal = false)
+    {
+        return grammar.AddNonterminal(name, isStartNonterminal);
+    }
+
+    const Symbol* AddTerminal(const char* name, const char* value)
+    {
+        return grammar.AddTerminal(name, value);
+    }
+
+    void AddProduction(const Symbol* head, const std::vector<const Symbol*>& tail)
+    {
+        grammar.AddProduction(head, tail);
+    }
+
     bool Parse(const char* input)
     {
         if (!bParserInitialized)
         {
-            ptlib_out << "PARSER INITIALIZATION FAILED" << std::endl;
-            return false;
+            bool failedAgain = !Initialize();
+            if (failedAgain) 
+            {
+                ptlib_out << "PARSER INITIALIZATION FAILED" << std::endl;
+                return false;
+            }
         }
 
         lexer.SetInput(input);

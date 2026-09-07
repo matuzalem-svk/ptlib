@@ -23,10 +23,10 @@ Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, http
 - standalone symbol table shared across lexer and parser
 - placeholder `std::regex`-based lexer
 - naive testing "playground"
+- basic define-togglable logging
 ### Things to be done
 #### Mandatory
 - tidied-up architecture
-- operator overloads for ptlib types for simplifying logging and manipulation
 - lexer improvements
     - whitespace skipping
     - explicit multiline input parsing support
@@ -38,7 +38,6 @@ Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, http
     - should be able to leverage modern C++ features such as `std::string_view` for efficient string manipulation
 - semantic action binding to production rules
 - grammar symbol operator overloads to be able to write grammars in EBNF-like form (see `boost::spirit`)
-- simplified user setup - singular front-end class used to construct grammars and encapsulate execution
 #### Optional, but nice to have
 - proper testing framework, e.g. gTest + unit test suite
 - compile-time lexer/parser generation

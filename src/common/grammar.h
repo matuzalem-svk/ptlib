@@ -59,7 +59,7 @@ namespace ptlib::common {
             return nt;
         }
 
-        void AddProduction(const Symbol* head, std::vector<const Symbol*> tail)
+        void AddProduction(const Symbol* head, const std::vector<const Symbol*>& tail)
         {
             Production p(head, tail);
             productions.push_back(p);
