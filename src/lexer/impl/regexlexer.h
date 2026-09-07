@@ -15,6 +15,7 @@
 #pragma once
 
 #include "lexer/ilexer.h"
+#include "common/utility.h"
 #include "common/types.h"
 #include "common/symboltable.h"
 #include <map>
@@ -54,7 +55,7 @@ public:
         input = std::move(inputString);
         inputPos = 0;
 
-        std::cout << "lexer input: " << std::quoted(input) << std::endl;
+        ptlib_out << "lexer input: " << std::quoted(input) << std::endl;
     }
 
     virtual const common::Symbol* GetToken() const override
@@ -78,7 +79,7 @@ public:
             if (inputPos == input.size())
             {
                 currentSymbol = common::SymbolTable::GetInstance().GetEOFSymbol();
-                std::cout << "lexeme(EOF)" << std::endl;
+                ptlib_out << "lexeme(EOF)" << std::endl;
                 return;
             }
 
@@ -90,8 +91,8 @@ public:
 
             buffer = std::string(input.data() + inputPos, bufferViewSize);
 
-            std::cout << "lexer buffer (" << inputPos << ", " << bufferViewSize << "): " << std::quoted(buffer) << std::endl;
-            std::cout << buffer.data() << std::endl;
+            ptlib_out << "lexer buffer (" << inputPos << ", " << bufferViewSize << "): " << std::quoted(buffer) << std::endl;
+            ptlib_out << buffer.data() << std::endl;
 
             for (auto [tokenName, tokenRegex] : symbolRegexList)
             {
@@ -112,7 +113,7 @@ public:
                 buffer = buffer.substr(0, buffer.size()-1);
 found_lexeme:
                 inputPos += bufferViewSize-1;
-                std::cout << "found lexeme " << std::quoted(buffer) << std::endl;
+                ptlib_out << "found lexeme " << std::quoted(buffer) << std::endl;
                 break;
             }
         }
@@ -129,10 +130,10 @@ found_lexeme:
 
         if (tokenName == nullptr)
         {
-            std::cout << "TOKEN NAME IS NULLPTR!!!" << std::endl;
+            ptlib_out << "TOKEN NAME IS NULLPTR!!!" << std::endl;
         }
 
-        std::cout << "lexeme(" << std::quoted(tokenName) << ", " << std::quoted(buffer.data()) << ")" << std::endl;
+        ptlib_out << "lexeme(" << std::quoted(tokenName) << ", " << std::quoted(buffer.data()) << ")" << std::endl;
 
         // TODO really need to make this work with string views, will require either a custom regex implementation or some wrapper around std::regex
         const common::Symbol* out = common::SymbolTable::GetInstance().InsertSymbol<common::SymbolTerminal>(tokenName, buffer.data());

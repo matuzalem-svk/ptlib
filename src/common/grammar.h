@@ -16,6 +16,7 @@
 
 #include "common/symbols.h"
 #include "common/symboltable.h"
+#include <iostream>
 
 namespace ptlib::common {
 
@@ -78,6 +79,25 @@ namespace ptlib::common {
             augmentedStartNonterminal = nt;
 
             bAugmented = true;
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const Grammar& g)
+        {
+#ifdef PTLIB_VERBOSE_LOGGING
+            for (const auto& p : g.productions)
+            {
+                os << *p.first << " -> ";
+
+                for (const auto& s : p.second)
+                {
+                    os << *s << " ";
+                }
+
+                os << std::endl;
+            }
+#endif
+
+            return os;
         }
 
         std::vector<const Symbol*> symbols;

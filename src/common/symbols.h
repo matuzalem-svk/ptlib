@@ -15,6 +15,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 
 namespace ptlib::common {
 
@@ -28,28 +29,13 @@ namespace ptlib::common {
         : name(inSymbol.name), value(inSymbol.value)
         {}
 
-        virtual ~Symbol()
+        virtual ~Symbol() 
         {}
 
-        constexpr virtual bool IsTerminal() const
-        {
-            return false;
-        }
-
-        constexpr virtual bool IsNonterminal() const
-        {
-            return false;
-        }
-
-        constexpr virtual bool IsEOF() const
-        {
-            return false;
-        }
-
-        constexpr virtual bool IsEmpty() const
-        {
-            return false;
-        }
+        constexpr virtual bool IsTerminal() const { return false; }
+        constexpr virtual bool IsNonterminal() const { return false; }
+        constexpr virtual bool IsEOF() const { return false; }
+        constexpr virtual bool IsEmpty() const { return false; }
 
         bool TypeEquals(const Symbol* other) const
         {
@@ -71,23 +57,34 @@ namespace ptlib::common {
             return TypeEquals(&other) && ValueEquals(&other);
         }
 
+        static constexpr const char* _SerializePrefix() { return "<undefined>"; }
+        virtual constexpr const char* _SymbolTypeString() const { return Symbol::_SerializePrefix(); }
+
         template<class SymbolT>
         static std::string Serialize(const char* name, const char* value)
         {
             std::string out;
 
-            out += SymbolT::_SerializePrefix()
-                +  std::string(name)
-                +  std::string(value);
+            out += SymbolT::_SerializePrefix();
+            out += name;
+            out += value;
 
             return out;
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const Symbol& s)
+        {
+#ifdef PTLIB_VERBOSE_LOGGING
+            os << "[" << s._SymbolTypeString() << "(" << s.name << "): \"" << s.value << "\"]";
+#endif
+            return os;
         }
 
         const char* name;
         const char* value;
     }; // struct Symbol
 
-    struct SymbolEOF : virtual public Symbol
+    struct SymbolEOF : public Symbol
     {
         SymbolEOF()
         : Symbol("EOF", "")
@@ -95,13 +92,11 @@ namespace ptlib::common {
 
         constexpr bool IsEOF() const override { return true; }
 
-        static std::string _SerializePrefix()
-        {
-            return "<EOF>_";
-        }
+        static constexpr const char* _SerializePrefix() { return "<EOF>"; }
+        constexpr const char* _SymbolTypeString() const override { return SymbolEOF::_SerializePrefix(); }
     }; // struct SymbolEOF
 
-    struct SymbolEmpty : virtual public Symbol
+    struct SymbolEmpty : public Symbol
     {
         SymbolEmpty()
         : Symbol("empty", "")
@@ -109,13 +104,11 @@ namespace ptlib::common {
 
         constexpr bool IsEmpty() const override { return true; }
 
-        static std::string _SerializePrefix()
-        {
-            return "<EMPTY>_";
-        }
+        static constexpr const char* _SerializePrefix() { return "<EMPTY>"; }
+        constexpr const char* _SymbolTypeString() const override { return SymbolEmpty::_SerializePrefix(); }
     }; // struct SymbolEmpty
 
-    struct SymbolTerminal : virtual public Symbol
+    struct SymbolTerminal : public Symbol
     {
         SymbolTerminal(const char* inTermName, const char* inTermValue)
         : Symbol(inTermName, inTermValue)
@@ -126,14 +119,12 @@ namespace ptlib::common {
 
         constexpr bool IsTerminal() const override { return true; }
 
-        static std::string _SerializePrefix()
-        {
-            return "<TERMINAL>_";
-        }
+        static constexpr const char* _SerializePrefix() { return "<T>"; }
+        constexpr const char* _SymbolTypeString() const override { return SymbolTerminal::_SerializePrefix(); }
 
     }; // struct SymbolTerminal
 
-    struct SymbolNonterminal : virtual public Symbol
+    struct SymbolNonterminal : public Symbol
     {
         SymbolNonterminal(const char* inName)
         : Symbol(inName, inName)
@@ -144,10 +135,8 @@ namespace ptlib::common {
 
         constexpr bool IsNonterminal() const override { return true; }
 
-        static std::string _SerializePrefix()
-        {
-            return "<NONTERMINAL>_";
-        }
+        static constexpr const char* _SerializePrefix() { return "<NT>"; }
+        constexpr const char* _SymbolTypeString() const override { return SymbolNonterminal::_SerializePrefix(); }
     }; // struct SymbolNonterminal
 
 } // namespace ptlib::common

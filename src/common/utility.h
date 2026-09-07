@@ -20,20 +20,29 @@
 
 namespace ptlib::utility {
 
-void printGrammarProductions(const common::Grammar& grammar)
+class NullStream : public std::ostream
 {
-    for (const auto& p : grammar.productions)
+public:
+    NullStream() 
+    : std::ostream(nullptr)
+    {}
+
+    NullStream(const NullStream&)
+    : std::ostream(nullptr)
+    {}
+
+    template <class T>
+    friend NullStream& operator<<(NullStream& os, const T& value)
     {
-        std::cout << p.first->value << " -> ";
-
-        for (const auto& s : p.second)
-        {
-            std::cout << s->value << "(" << (s->IsTerminal()?"T":"NT") << ") ";
-        }
-
-        std::cout << std::endl;
+        return os;
     }
-}
+} inline nullout;
+
+#ifdef PTLIB_VERBOSE_LOGGING
+#define ptlib_out std::cout
+#else
+#define ptlib_out ptlib::utility::nullout
+#endif
 
 void printLRItemSet(const common::Grammar& grammar, const common::LRItemSet& itemSet)
 {
@@ -41,26 +50,26 @@ void printLRItemSet(const common::Grammar& grammar, const common::LRItemSet& ite
     {
         ptlib::common::Production p = grammar.productions[item.first];
 
-        std::cout << p.first->value << " -> ";
+        ptlib_out << *p.first << " -> ";
 
         bool dotPrinted = false;
         for (int i = 0; i < p.second.size(); ++i)
         {
             if (i == item.second)
             {
-                std::cout << ". ";
+                ptlib_out << ". ";
                 dotPrinted = true;
             }
 
-            std::cout << p.second[i]->value << "(" << (p.second[i]->IsTerminal()?"T":"NT") << ") ";
+            ptlib_out << *p.second[i];
         }
 
         if (!dotPrinted)
         {
-            std::cout << ".";
+            ptlib_out << ".";
         }
 
-        std::cout << std::endl;
+        ptlib_out << std::endl;
     }
 }
 

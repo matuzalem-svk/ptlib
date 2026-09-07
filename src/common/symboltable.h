@@ -19,6 +19,8 @@
 #include <set>
 #include <map>
 #include <memory>
+#include <iostream>
+#include <iomanip>
 
 namespace ptlib::common {
 
@@ -60,14 +62,14 @@ public:
         const Symbol* out = nullptr;
         if (it == symbols.end())
         {
-            strings.insert(value);
+            auto valueResult = strings.insert(std::move(value));
             if constexpr (std::is_same_v<SymbolT, SymbolNonterminal>)
             {
                 out = symbols.insert({symbolKey, std::make_unique<SymbolNonterminal>(name)}).first->second.get();
             }
             else
             {
-                out = symbols.insert({symbolKey, std::make_unique<SymbolT>(name, value)}).first->second.get();
+                out = symbols.insert({symbolKey, std::make_unique<SymbolT>(name, valueResult.first->data())}).first->second.get();
             }
         }
         else
@@ -93,6 +95,19 @@ public:
     {
         static SymbolEmpty emptySymbol;
         return &emptySymbol;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const SymbolTable& st)
+    {
+#ifdef PTLIB_VERBOSE_LOGGING
+        for (const auto& [symbolKey, symbolPtr] : st.symbols)
+        {
+            os << std::quoted(symbolKey) << ": " << *symbolPtr.get() << std::endl;
+        }
+
+        os << std::endl;
+#endif
+        return os;
     }
 
 protected:

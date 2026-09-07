@@ -32,88 +32,7 @@ using namespace ptlib::common;
 class SLRParser : public IParserImpl
 {
 public:
-    SLRParser() {}
-    SLRParser(const Grammar& grammar)
-    {
-        /*
-        std::cout << "GRAMMAR PRODUCTIONS" << std::endl;
-        utility::printGrammarProductions(grammar);
-        std::cout << std::endl;
-
-        std::cout << "SLR ITEM SETS" << std::endl;
-        size_t debugItemSet = 0;
-        for (const auto& itemSet : collection)
-        {
-            std::cout << debugItemSet << std::endl;
-            utility::printLRItemSet(grammar, itemSet);
-            std::cout << std::endl;
-            ++debugItemSet;
-        }
-
-        std::cout << "GOTO" << std::endl;
-        for (const auto& [gotoParam, nextState] : GOTO)
-        {
-            std::cout << "{ " << gotoParam.first << ", '" << gotoParam.second->name << "' } = " << nextState << std::endl;
-        }
-        std::cout << std::endl;
-
-        std::cout << "FIRST" << std::endl;
-        for (const auto& firstItem : FIRST)
-        {
-            std::cout << "{ '" << firstItem.first->name << "' } = { ";
-            for (const auto* symbol : firstItem.second)
-            {
-                std::cout << "'" << symbol->name << "', ";
-            }
-            std::cout << "}" << std::endl;
-        }
-        std::cout << std::endl;
-
-        std::cout << "FOLLOW" << std::endl;
-        for (const auto& followItem : FOLLOW)
-        {
-            std::cout << "{ '" << followItem.first->name << "' } = { ";
-            for (const auto* symbol : followItem.second)
-            {
-                std::cout << "'" << symbol->name << "', ";
-            }
-            std::cout << "}" << std::endl;
-        }
-        std::cout << std::endl;
-
-        std::cout << "PARSE TABLE" << std::endl;
-        size_t curItem = 0;
-        for (const auto& [tableKey, parseAction] : PARSE_TABLE)
-        {
-            if (std::get<0>(tableKey) > curItem)
-            {
-                curItem = std::get<0>(tableKey);
-                std::cout << std::endl;
-            }
-
-            std::cout << std::get<0>(tableKey) << ": ";
-            std::cout << "{'" << std::get<1>(tableKey)->name << "', ";
-            switch (parseAction.actionType)
-            {
-                case PARSE_ACCEPT:
-                    std::cout << "ACCEPT";
-                    break;
-                case PARSE_SHIFT:
-                    std::cout << "s" << parseAction.parameter;
-                    break;
-                case PARSE_REDUCE:
-                    std::cout << "r" << parseAction.parameter;
-                    break;
-                case PARSE_GOTO:
-                    std::cout << "GOTO " << parseAction.parameter;
-                    break;
-            }
-
-            std::cout << "} ";
-        }
-        std::cout << std::endl;
-        */
-    }
+    SLRParser() = default;
 
     virtual bool Initialize(const common::Grammar& grammar) override
     {
@@ -124,6 +43,85 @@ public:
         auto FOLLOW = GENERATE_FOLLOW(grammar, FIRST);
 
         PARSE_TABLE = GenerateParseTable(grammar, collection, FOLLOW, GOTO);
+
+#ifdef PTLIB_VERBOSE_LOGGING
+        ptlib_out << "GRAMMAR PRODUCTIONS" << std::endl;
+        ptlib_out << grammar << std::endl;
+
+        ptlib_out << "SLR ITEM SETS" << std::endl;
+        size_t debugItemSet = 0;
+        for (const auto& itemSet : collection)
+        {
+            ptlib_out << debugItemSet << std::endl;
+            utility::printLRItemSet(grammar, itemSet);
+            ptlib_out << std::endl;
+            ++debugItemSet;
+        }
+
+        ptlib_out << "GOTO" << std::endl;
+        for (const auto& [gotoParam, nextState] : GOTO)
+        {
+            ptlib_out << "{ " << gotoParam.first << ", " << *gotoParam.second << " } = " << nextState << std::endl;
+        }
+        ptlib_out << std::endl;
+
+        ptlib_out << "FIRST" << std::endl;
+        for (const auto& firstItem : FIRST)
+        {
+            ptlib_out << "{ " << *firstItem.first << " } = { ";
+            for (const auto* symbol : firstItem.second)
+            {
+                ptlib_out << *symbol << "', ";
+            }
+            ptlib_out << "}" << std::endl;
+        }
+        ptlib_out << std::endl;
+
+        ptlib_out << "FOLLOW" << std::endl;
+        for (const auto& followItem : FOLLOW)
+        {
+            ptlib_out << "{ " << *followItem.first << " } = { ";
+            for (const auto* symbol : followItem.second)
+            {
+                ptlib_out << *symbol << ", ";
+            }
+            ptlib_out << "}" << std::endl;
+        }
+        ptlib_out << std::endl;
+
+        ptlib_out << "PARSE TABLE" << std::endl;
+        size_t curItem = 0;
+        for (const auto& [tableKey, parseAction] : PARSE_TABLE)
+        {
+            if (std::get<0>(tableKey) > curItem)
+            {
+                curItem = std::get<0>(tableKey);
+                ptlib_out << std::endl;
+            }
+
+            ptlib_out << "{ ";
+            ptlib_out << std::get<0>(tableKey) << ", ";
+            ptlib_out << *std::get<1>(tableKey) << " }: ";
+            switch (parseAction.actionType)
+            {
+                case PARSE_ACCEPT:
+                    ptlib_out << "ACCEPT";
+                    break;
+                case PARSE_SHIFT:
+                    ptlib_out << "s" << parseAction.parameter;
+                    break;
+                case PARSE_REDUCE:
+                    ptlib_out << "r" << parseAction.parameter;
+                    break;
+                case PARSE_GOTO:
+                    ptlib_out << "GOTO " << parseAction.parameter;
+                    break;
+            }
+
+            ptlib_out << std::endl;
+        }
+        ptlib_out << std::endl;
+#endif
 
         return !PARSE_TABLE.empty();
     }
@@ -152,7 +150,7 @@ public:
         // no parsing action for state/symbol == error
         if (actionIt == PARSE_TABLE.end())
         {
-            std::cout << "PARSING FAILED!!!" << std::endl;
+            ptlib_out << "PARSING FAILED!!!" << std::endl;
             return { false, false, false };
         }
 
@@ -161,20 +159,20 @@ public:
         {
             case PARSE_ACCEPT:
             {
-                std::cout << "PARSING SUCCESSFUL!!!" << std::endl;
+                ptlib_out << "PARSING SUCCESSFUL!!!" << std::endl;
                 return { true, false, true };
             }
             break;
             case PARSE_SHIFT:
             {
-                std::cout << "s" << action.parameter << " - shift " << std::quoted(token->value) << std::endl;
+                ptlib_out << "s" << action.parameter << " - shift " << std::quoted(token->value) << std::endl;
                 PARSE_STACK.push(action.parameter);
                 return { true, true, false };
             }
             break;
             case PARSE_REDUCE:
             {
-                std::cout << "r" << action.parameter << " - reduce " << action.parameter << std::endl;
+                ptlib_out << "r" << action.parameter << " - reduce " << action.parameter << std::endl;
 
                 for (size_t j = 0; j < action.reduceAmount; ++j)
                 {
@@ -185,7 +183,7 @@ public:
                 auto gotoIt = PARSE_TABLE.find({ newTopState, action.reduceGotoNonterm });
                 if (gotoIt == PARSE_TABLE.end() || gotoIt->second.actionType != PARSE_GOTO)
                 {
-                    std::cout << "EXPECTED GOTO ACTION!!!" << std::endl;
+                    ptlib_out << "EXPECTED GOTO ACTION!!!" << std::endl;
                     return { false, false, false };
                 }
                 PARSE_STACK.push(gotoIt->second.parameter);

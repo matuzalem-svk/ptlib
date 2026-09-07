@@ -45,7 +45,7 @@ public:
     {
         if (!bParserInitialized)
         {
-            std::cout << "PARSER INITIALIZATION FAILED" << std::endl;
+            ptlib_out << "PARSER INITIALIZATION FAILED" << std::endl;
             return false;
         }
 
@@ -66,7 +66,7 @@ public:
 
             if (stepResult.actionSuccess && stepResult.parseSuccess)
             {
-                std::cout << "PARSE SUCCESSFUL" << std::endl;
+                ptlib_out << "PARSE SUCCESSFUL" << std::endl;
                 break;
             }
         }

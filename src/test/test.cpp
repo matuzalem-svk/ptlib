@@ -1,3 +1,4 @@
+#define PTLIB_VERBOSE_LOGGING
 #include "ptlib.h"
 
 int main()
@@ -20,7 +21,7 @@ int main()
     grammar.AddProduction( factor_, { t_id_ } );
 
     ptlib::Parser parser(grammar);
-    parser.Parse("a*(bb+ccc)");
+    parser.Parse("a+a*(bb+ccc)");
 
     return EXIT_SUCCESS;
 }
