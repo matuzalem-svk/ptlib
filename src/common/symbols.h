@@ -31,22 +31,22 @@ namespace ptlib::common {
         virtual ~Symbol()
         {}
 
-        virtual bool IsTerminal() const
+        constexpr virtual bool IsTerminal() const
         {
             return false;
         }
 
-        virtual bool IsNonterminal() const
+        constexpr virtual bool IsNonterminal() const
         {
             return false;
         }
 
-        virtual bool IsEOF() const
+        constexpr virtual bool IsEOF() const
         {
             return false;
         }
 
-        virtual bool IsEmpty() const
+        constexpr virtual bool IsEmpty() const
         {
             return false;
         }
@@ -93,7 +93,7 @@ namespace ptlib::common {
         : Symbol("EOF", "")
         {}
 
-        bool IsEOF() const override { return true; }
+        constexpr bool IsEOF() const override { return true; }
 
         static std::string _SerializePrefix()
         {
@@ -107,7 +107,7 @@ namespace ptlib::common {
         : Symbol("empty", "")
         {}
 
-        bool IsEmpty() const override { return true; }
+        constexpr bool IsEmpty() const override { return true; }
 
         static std::string _SerializePrefix()
         {
@@ -124,7 +124,7 @@ namespace ptlib::common {
         ~SymbolTerminal()
         {}
 
-        bool IsTerminal() const override { return true; }
+        constexpr bool IsTerminal() const override { return true; }
 
         static std::string _SerializePrefix()
         {
@@ -142,7 +142,7 @@ namespace ptlib::common {
         ~SymbolNonterminal()
         {}
 
-        bool IsNonterminal() const override { return true; }
+        constexpr bool IsNonterminal() const override { return true; }
 
         static std::string _SerializePrefix()
         {
