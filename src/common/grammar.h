@@ -31,7 +31,11 @@ namespace ptlib::common {
 
         ~Grammar()
         {
-            delete augmentedStartNonterminal;
+            if (augmentedStartNonterminal)
+            {
+                delete augmentedStartNonterminal;
+                augmentedStartNonterminal = nullptr;
+            }
         }
 
         const Symbol* AddTerminal(const char* name, const char* value)
