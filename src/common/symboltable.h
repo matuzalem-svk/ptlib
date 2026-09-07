@@ -54,7 +54,7 @@ public:
     {
         static_assert(std::is_base_of<Symbol, SymbolT>::value, "InsertSymbol() template class must be a subtype of Symbol!");
 
-        std::string symbolKey = Symbol::Serialize(name, value);
+        std::string symbolKey = Symbol::Serialize<SymbolT>(name, value);
         auto it = symbols.find(symbolKey);
 
         const Symbol* out = nullptr;

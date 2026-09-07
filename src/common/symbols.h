@@ -77,11 +77,13 @@ namespace ptlib { namespace common {
             return Symbol::Serialize(name, value);
         }
 
+        template<class SymbolT>
         static std::string Serialize(const char* name, const char* value)
         {
             std::string out;
 
-            out += std::string(name)
+            out += SymbolT::_SerializePrefix()
+                +  std::string(name)
                 +  std::string(value);
 
             return out;
@@ -98,6 +100,11 @@ namespace ptlib { namespace common {
         {}
 
         bool IsEOF() const override { return true; }
+
+        static std::string _SerializePrefix()
+        {
+            return "<EOF>_";
+        }
     }; // struct SymbolEOF
 
     struct SymbolEmpty : virtual public Symbol
@@ -107,6 +114,11 @@ namespace ptlib { namespace common {
         {}
 
         bool IsEmpty() const override { return true; }
+
+        static std::string _SerializePrefix()
+        {
+            return "<EMPTY>_";
+        }
     }; // struct SymbolEmpty
 
     struct SymbolTerminal : virtual public Symbol
@@ -120,6 +132,11 @@ namespace ptlib { namespace common {
 
         bool IsTerminal() const override { return true; }
 
+        static std::string _SerializePrefix()
+        {
+            return "<TERMINAL>_";
+        }
+
     }; // struct SymbolTerminal
 
     struct SymbolNonterminal : virtual public Symbol
@@ -132,6 +149,11 @@ namespace ptlib { namespace common {
         {}
 
         bool IsNonterminal() const override { return true; }
+
+        static std::string _SerializePrefix()
+        {
+            return "<NONTERMINAL>_";
+        }
     }; // struct SymbolNonterminal
 
 }} // namespace ptlib::common
