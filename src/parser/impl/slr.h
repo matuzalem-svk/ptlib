@@ -205,16 +205,16 @@ protected:
         do
         {
             itemsAdded = false;
-            for (const auto& item : outItems)
+            for (const auto& [lrItemID, dotPosition] : outItems)
             {
-                Production prod = inGrammar.productions[item.first];
+                Production prod = inGrammar.productions[lrItemID];
 
-                if (item.second >= prod.second.size())
+                if (dotPosition >= prod.second.size())
                 {
                     continue;
                 }
 
-                const Symbol* symbolAfterDot = prod.second[item.second];
+                const Symbol* symbolAfterDot = prod.second[dotPosition];
                 if (symbolAfterDot->IsNonterminal())
                 {
                     for (int i = 0; i < inGrammar.productions.size(); ++i)
@@ -242,23 +242,23 @@ protected:
     {
         LRItemSet inItems;
 
-        for (const auto& item : inItemSet)
+        for (const auto& [lrItemID, dotPosition] : inItemSet)
         {
-            const Production& prod = inGrammar.productions[item.first];
+            const auto& [prodHead, prodBody] = inGrammar.productions[lrItemID];
 
-            if (item.second >= prod.second.size())
+            if (dotPosition >= prodBody.size())
             {
                 continue;
             }
 
-            const Symbol* symbolAfterDot = prod.second[item.second];
+            const Symbol* symbolAfterDot = prodBody[dotPosition];
 
             if (symbolAfterDot->TypeEquals(inSymbol))
             {
-                bool added = std::find(inItems.begin(), inItems.end(), LRItem{item.first, item.second+1}) == inItems.end();
+                bool added = std::find(inItems.begin(), inItems.end(), LRItem{ lrItemID, dotPosition + 1 }) == inItems.end();
                 if (added)
                 {
-                    inItems.push_back({item.first, item.second + 1});
+                    inItems.push_back({lrItemID, dotPosition + 1});
                 }
             }
         }
@@ -269,7 +269,7 @@ protected:
     LRItemSetCollection GenerateCanonicalSymbolCollection(const Grammar& inGrammar, ParseGotoMap& outGoto) const
     {
         LRItemSetCollection out;
-        out.push_back(CLOSURE(inGrammar, LRItemSet{ LRItem{0, 0}}));
+        out.push_back(CLOSURE(inGrammar, LRItemSet{ LRItem{ 0, 0 }}));
 
         bool newSetAddedToCollection;
         do
@@ -324,26 +324,24 @@ protected:
         {
             bAddedNewFirst = false;
 
-            for (const Production& prod : inGrammar.productions)
+            for (const auto& [prodHead, prodBody] : inGrammar.productions)
             {
-                const Symbol* symbol = prod.first;
+                if (prodBody.size() == 0) continue;
 
-                if (prod.second.size() == 0) continue;
-
-                if (prod.second.size() == 1 && prod.second[0] == common::SymbolTable::GetInstance().GetEmptySymbol())
+                if (prodBody.size() == 1 && prodBody[0] == common::SymbolTable::GetInstance().GetEmptySymbol())
                 {
-                    bAddedNewFirst |= FIRST[symbol].insert(common::SymbolTable::GetInstance().GetEmptySymbol()).second;
+                    bAddedNewFirst |= FIRST[prodHead].insert(common::SymbolTable::GetInstance().GetEmptySymbol()).second;
                     continue;
                 }
 
-                for (const Symbol* tailSymbol : prod.second)
+                for (const Symbol* bodySymbol : prodBody)
                 {
-                    const auto& tailSymbolFirstSet = FIRST[tailSymbol];
-                    if (tailSymbolFirstSet.count(common::SymbolTable::GetInstance().GetEmptySymbol())) continue;
+                    const auto& bodySymbolFirstSet = FIRST[bodySymbol];
+                    if (bodySymbolFirstSet.count(common::SymbolTable::GetInstance().GetEmptySymbol())) continue;
 
-                    for (const Symbol* kokod : tailSymbolFirstSet)
+                    for (const Symbol* s : bodySymbolFirstSet)
                     {
-                        bAddedNewFirst |= FIRST[symbol].insert(kokod).second;
+                        bAddedNewFirst |= FIRST[prodHead].insert(s).second;
                     }
 
                     break;
@@ -373,20 +371,20 @@ protected:
         {
             bAddedNewFollow = false;
 
-            for (const Production& prod : inGrammar.productions)
+            for (const auto& [prodHead, prodBody] : inGrammar.productions)
             {
-                if (prod.second.size() == 0) continue;
+                if (prodBody.size() == 0) continue;
 
-                for (size_t i = 0; i < prod.second.size(); ++i)
+                for (size_t i = 0; i < prodBody.size(); ++i)
                 {
-                    const Symbol* tailSymbol = prod.second[i];
+                    const Symbol* tailSymbol = prodBody[i];
 
                     if (tailSymbol->IsTerminal()) continue;
 
-                    auto firstIt = FIRST.find(prod.second[i]); // TODO sanity check
-                    if (i == prod.second.size() - 1 || firstIt->second.count(common::SymbolTable::GetInstance().GetEmptySymbol()))
+                    auto firstIt = FIRST.find(prodBody[i]); // TODO sanity check
+                    if (i == prodBody.size() - 1 || firstIt->second.count(common::SymbolTable::GetInstance().GetEmptySymbol()))
                     {
-                        for (const Symbol* kokodSymbol : FOLLOW[prod.first])
+                        for (const Symbol* kokodSymbol : FOLLOW[prodHead])
                         {
                             bAddedNewFollow |= FOLLOW[tailSymbol].insert(kokodSymbol).second;
                         }
@@ -394,7 +392,7 @@ protected:
                         continue;
                     }
 
-                    firstIt = FIRST.find(prod.second[i + 1]); // TODO sanity check
+                    firstIt = FIRST.find(prodBody[i + 1]); // TODO sanity check
                     for (const Symbol* kokodSymbol : firstIt->second)
                     {
                         bAddedNewFollow |= FOLLOW[tailSymbol].insert(kokodSymbol).second;
@@ -426,13 +424,11 @@ protected:
         {
             const LRItemSet& itemSet = inCanonicalCollection[i];
 
-            for (const auto& item : itemSet)
+            for (const auto& [lrItemID, dotPosition] : itemSet)
             {
-                const size_t prodId = item.first;
-                const Production& prod = inGrammar.productions[prodId];
-                const int prodDot = item.second;
+                const Production& prod = inGrammar.productions[lrItemID];
 
-                if (prodDot == prod.second.size())
+                if (dotPosition == prod.second.size())
                 {
                     // [S' -> S.] means ACTION[i, EOF] = ACCEPT
                     if (prod.first == inGrammar.augmentedStartNonterminal)
@@ -448,7 +444,7 @@ protected:
                         if (!TryAddParseTableAction(PARSE_TABLE, { i, followTerminal }, 
                             { 
                                 .actionType = PARSE_REDUCE, 
-                                .parameter = prodId, 
+                                .parameter = lrItemID, 
                                 .reduceAmount = prod.second.size(), 
                                 .reduceGotoNonterm = prod.first 
                             })) return empty;
@@ -458,7 +454,7 @@ protected:
                 }
 
                 // [A -> w.ay] means ACTION[i, a] = SHIFT j for GOTO(i, a) = j, a is a terminal
-                const Symbol* nextSymbol = prod.second[prodDot];
+                const Symbol* nextSymbol = prod.second[dotPosition];
                 if (!nextSymbol->IsTerminal()) continue;
 
                 auto gotoIt = GOTO.find({ i, nextSymbol }); // TODO sanity check
