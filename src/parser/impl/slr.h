@@ -133,16 +133,12 @@ public:
         PARSE_STACK.push(0);
     }
 
-    virtual ParseStepResult StepParse(const Symbol* token) override
+    virtual ParseStepResult StepParse(const Grammar& grammar, const Symbol* token) override
     {
         const LRStateID& topState = PARSE_STACK.top();
 
-        //auto actionIt = PARSE_TABLE.find({ topState, token });
-
         auto actionIt = std::find_if(PARSE_TABLE.begin(), PARSE_TABLE.end(), [&topState, &token](const std::pair<std::tuple<LRStateID, const Symbol*>, ParseAction>& parseAction)
         {
-            /*LRStateID stateId = std::get<0>(parseAction.first);
-            const Symbol* nextToken = std::get<1>(parseAction.first);*/
             auto [stateId, nextToken] = parseAction.first;
             return topState == stateId && token->TypeEquals(nextToken);
         });
@@ -167,6 +163,7 @@ public:
             {
                 ptlib_out << "s" << action.parameter << " - shift " << std::quoted(token->value) << std::endl;
                 PARSE_STACK.push(action.parameter);
+                symbolStack.push(const_cast<Symbol*>(token));
                 return { true, true, false };
             }
             break;
@@ -174,10 +171,17 @@ public:
             {
                 ptlib_out << "r" << action.parameter << " - reduce " << action.parameter << std::endl;
 
-                for (size_t j = 0; j < action.reduceAmount; ++j)
+                const auto& [productionHead, productionBody] = grammar[action.parameter];
+
+                SymbolString reducedSymbols;
+                for (size_t j = 0; j < productionBody.symbols.size(); ++j)
                 {
                     PARSE_STACK.pop();
+                    reducedSymbols.symbols.push_back(symbolStack.top());
+                    symbolStack.pop();
                 }
+
+                std::reverse(reducedSymbols.symbols.begin(), reducedSymbols.symbols.end());
 
                 const LRStateID& newTopState = PARSE_STACK.top();
                 auto gotoIt = PARSE_TABLE.find({ newTopState, action.reduceGotoNonterm });
@@ -187,6 +191,15 @@ public:
                     return { false, false, false };
                 }
                 PARSE_STACK.push(gotoIt->second.parameter);
+
+                // will leak memory
+                Symbol* s = new SymbolNonterminal(productionHead->name);
+                if (productionBody.reductionCallback) 
+                {
+                    productionBody.reductionCallback(s, reducedSymbols);
+                }
+                symbolStack.push(s);
+
                 return { true, false, false };
             }
             break;
@@ -207,14 +220,14 @@ protected:
             itemsAdded = false;
             for (const auto& [lrItemID, dotPosition] : outItems)
             {
-                Production prod = inGrammar.productions[lrItemID];
+                const Production& prod = inGrammar.productions[lrItemID];
 
-                if (dotPosition >= prod.second.size())
+                if (dotPosition >= prod.second.symbols.size())
                 {
                     continue;
                 }
 
-                const Symbol* symbolAfterDot = prod.second[dotPosition];
+                const Symbol* symbolAfterDot = prod.second.symbols[dotPosition];
                 if (symbolAfterDot->IsNonterminal())
                 {
                     for (int i = 0; i < inGrammar.productions.size(); ++i)
@@ -246,12 +259,12 @@ protected:
         {
             const auto& [prodHead, prodBody] = inGrammar.productions[lrItemID];
 
-            if (dotPosition >= prodBody.size())
+            if (dotPosition >= prodBody.symbols.size())
             {
                 continue;
             }
 
-            const Symbol* symbolAfterDot = prodBody[dotPosition];
+            const Symbol* symbolAfterDot = prodBody.symbols[dotPosition];
 
             if (symbolAfterDot->TypeEquals(inSymbol))
             {
@@ -326,15 +339,15 @@ protected:
 
             for (const auto& [prodHead, prodBody] : inGrammar.productions)
             {
-                if (prodBody.size() == 0) continue;
+                if (prodBody.symbols.size() == 0) continue;
 
-                if (prodBody.size() == 1 && prodBody[0] == common::SymbolTable::GetInstance().GetEmptySymbol())
+                if (prodBody.symbols.size() == 1 && prodBody.symbols[0] == common::SymbolTable::GetInstance().GetEmptySymbol())
                 {
                     bAddedNewFirst |= FIRST[prodHead].insert(common::SymbolTable::GetInstance().GetEmptySymbol()).second;
                     continue;
                 }
 
-                for (const Symbol* bodySymbol : prodBody)
+                for (const Symbol* bodySymbol : prodBody.symbols)
                 {
                     const auto& bodySymbolFirstSet = FIRST[bodySymbol];
                     if (bodySymbolFirstSet.count(common::SymbolTable::GetInstance().GetEmptySymbol())) continue;
@@ -373,16 +386,16 @@ protected:
 
             for (const auto& [prodHead, prodBody] : inGrammar.productions)
             {
-                if (prodBody.size() == 0) continue;
+                if (prodBody.symbols.size() == 0) continue;
 
-                for (size_t i = 0; i < prodBody.size(); ++i)
+                for (size_t i = 0; i < prodBody.symbols.size(); ++i)
                 {
-                    const Symbol* tailSymbol = prodBody[i];
+                    const Symbol* tailSymbol = prodBody.symbols[i];
 
                     if (tailSymbol->IsTerminal()) continue;
 
-                    auto firstIt = FIRST.find(prodBody[i]); // TODO sanity check
-                    if (i == prodBody.size() - 1 || firstIt->second.count(common::SymbolTable::GetInstance().GetEmptySymbol()))
+                    auto firstIt = FIRST.find(prodBody.symbols[i]); // TODO sanity check
+                    if (i == prodBody.symbols.size() - 1 || firstIt->second.count(common::SymbolTable::GetInstance().GetEmptySymbol()))
                     {
                         for (const Symbol* kokodSymbol : FOLLOW[prodHead])
                         {
@@ -392,7 +405,7 @@ protected:
                         continue;
                     }
 
-                    firstIt = FIRST.find(prodBody[i + 1]); // TODO sanity check
+                    firstIt = FIRST.find(prodBody.symbols[i + 1]); // TODO sanity check
                     for (const Symbol* kokodSymbol : firstIt->second)
                     {
                         bAddedNewFollow |= FOLLOW[tailSymbol].insert(kokodSymbol).second;
@@ -428,7 +441,7 @@ protected:
             {
                 const Production& prod = inGrammar.productions[lrItemID];
 
-                if (dotPosition == prod.second.size())
+                if (dotPosition == prod.second.symbols.size())
                 {
                     // [S' -> S.] means ACTION[i, EOF] = ACCEPT
                     if (prod.first == inGrammar.augmentedStartNonterminal)
@@ -445,7 +458,7 @@ protected:
                             { 
                                 .actionType = PARSE_REDUCE, 
                                 .parameter = lrItemID, 
-                                .reduceAmount = prod.second.size(), 
+                                .reduceAmount = prod.second.symbols.size(), 
                                 .reduceGotoNonterm = prod.first 
                             })) return empty;
                     }
@@ -454,7 +467,7 @@ protected:
                 }
 
                 // [A -> w.ay] means ACTION[i, a] = SHIFT j for GOTO(i, a) = j, a is a terminal
-                const Symbol* nextSymbol = prod.second[dotPosition];
+                const Symbol* nextSymbol = prod.second.symbols[dotPosition];
                 if (!nextSymbol->IsTerminal()) continue;
 
                 auto gotoIt = GOTO.find({ i, nextSymbol }); // TODO sanity check
@@ -479,6 +492,7 @@ protected:
 protected:
     ParseTableMap PARSE_TABLE;
     std::stack<LRStateID> PARSE_STACK;
+    std::stack<Symbol*> symbolStack;
 }; // class SLRParser
 
 } // namespace ptlib::parser

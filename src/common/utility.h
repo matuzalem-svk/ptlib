@@ -48,12 +48,12 @@ void printLRItemSet(const common::Grammar& grammar, const common::LRItemSet& ite
 {
     for (const auto& item : itemSet)
     {
-        ptlib::common::Production p = grammar.productions[item.first];
+        const ptlib::common::Production& p = grammar.productions[item.first];
 
         ptlib_out << *p.first << " -> ";
 
         bool dotPrinted = false;
-        for (int i = 0; i < p.second.size(); ++i)
+        for (int i = 0; i < p.second.symbols.size(); ++i)
         {
             if (i == item.second)
             {
@@ -61,7 +61,7 @@ void printLRItemSet(const common::Grammar& grammar, const common::LRItemSet& ite
                 dotPrinted = true;
             }
 
-            ptlib_out << *p.second[i];
+            ptlib_out << *p.second.symbols[i];
         }
 
         if (!dotPrinted)

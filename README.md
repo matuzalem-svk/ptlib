@@ -8,12 +8,16 @@ Author's exercise in formal language theory, modern C++23 usage and compile-time
 ## Usage intent
 Author's exercise in formal language theory application.
 
-For any actual production use, please strongly consider [boost::spirit](https://github.com/boostorg/spirit) or [Spirit.X4](https://github.com/boostorg/spirit_x4) instead.
+For any actual production use, please strongly consider [boost::spirit](https://github.com/boostorg/spirit), [Spirit.X4](https://github.com/boostorg/spirit_x4), or [CTPG](https://github.com/peter-winter/ctpg) instead.
 
 ## Source literature
 Aho, A. V.; Lam, M. S.; Sethi, R.; Ullman, J. D.: *Compilers: Principles, Techniques, and Tools, Second Edition*, Pearson Education Limited, 2014, ISBN 972-1-292-02434-9
 
 Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, https://github.com/MarioGalindoQ/Modern-CPP-Design-Patterns
+
+Sourstroup, B.; Sutter, H.: *C++ Core Guidelines*, GitHub, 2026, https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
+
+Winter, P.: *CTPG - C++ Compile Time Parser Generator*, GitHub, 2024, https://github.com/peter-winter/ctpg
 
 ## State of the project
 ### Current state
@@ -24,6 +28,7 @@ Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, http
 - placeholder `std::regex`-based lexer
 - naive testing "playground"
 - basic define-togglable logging
+- basic semantic actions for productions (only supports side effects for now)
 ### Things to be done
 #### Mandatory
 - tidied-up architecture
@@ -36,7 +41,6 @@ Queralt, M.G.: *Modern C++ Design Patterns && OO Principles*, GitHub, 2026, http
 - custom lexer generation
     - *reason:* `std::regex` is basically abandonware at this point lacking integration with modern C++ features, using another library defeats the purpose of ptlib
     - should be able to leverage modern C++ features such as `std::string_view` for efficient string manipulation
-- semantic action binding to production rules
 - grammar symbol operator overloads to be able to write grammars in EBNF-like form (see `boost::spirit`)
 #### Optional, but nice to have
 - proper testing framework, e.g. gTest + unit test suite

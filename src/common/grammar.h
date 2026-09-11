@@ -17,8 +17,32 @@
 #include "common/symbols.h"
 #include "common/symboltable.h"
 #include <iostream>
+#include <functional>
 
 namespace ptlib::common {
+
+    struct SymbolString
+    {
+        SymbolString() = default;
+
+        SymbolString(std::initializer_list<const Symbol*> ilist)
+        : symbols(ilist)
+        {}
+
+        SymbolString& operator>>(const std::function<void(Symbol*, const SymbolString&)>& callback)
+        {
+            reductionCallback = std::move(callback);
+            return *this;
+        }
+
+        void push_back(const Symbol* symbol)
+        {
+            symbols.push_back(symbol);
+        }
+
+        std::vector<const Symbol*> symbols;
+        std::function<void(Symbol*, const SymbolString&)> reductionCallback;
+    };
 
     typedef std::pair<const SymbolNonterminal*, SymbolString> Production;
 
@@ -61,9 +85,14 @@ namespace ptlib::common {
 
         SymbolString& operator[](const SymbolNonterminal* head)
         {
-            Production p(head, {});
+            Production p(head, SymbolString{});
             productions.push_back(p);
             return productions.back().second;
+        }
+
+        const Production& operator[](size_t idx) const
+        {
+            return productions[idx];
         }
 
         void AugmentGrammar()
@@ -74,7 +103,7 @@ namespace ptlib::common {
             static const char* augNtName = "__ptlib_augmented_start_nonterminal__";
             const SymbolNonterminal* nt = dynamic_cast<const SymbolNonterminal*>(SymbolTable::GetInstance().InsertSymbol<SymbolNonterminal>(augNtName, augNtName));
 
-            Production p(nt, { startNonterminal });
+            Production p(nt, SymbolString{ startNonterminal });
             productions.insert(productions.begin(), p);
 
             augmentedStartNonterminal = nt;
@@ -89,7 +118,7 @@ namespace ptlib::common {
             {
                 os << *p.first << " -> ";
 
-                for (const auto& s : p.second)
+                for (const auto& s : p.second.symbols)
                 {
                     os << *s << " ";
                 }

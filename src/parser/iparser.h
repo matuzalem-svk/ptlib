@@ -64,7 +64,7 @@ class IParserImpl
 public:
     virtual bool Initialize(const common::Grammar&) = 0;
     virtual void ResetParse() = 0;
-    virtual ParseStepResult StepParse(const Symbol*) = 0;
+    virtual ParseStepResult StepParse(const Grammar&, const Symbol*) = 0;
 
 }; // class IParserImpl
 

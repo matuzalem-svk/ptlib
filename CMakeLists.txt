@@ -29,3 +29,10 @@ target_include_directories(ptlibtest
         src
 )
 target_sources(ptlibtest PRIVATE src/test/test.cpp)
+
+add_executable(if2pf)
+target_include_directories(if2pf
+    PUBLIC
+        src
+)
+target_sources(if2pf PRIVATE src/test/if2pf.cpp)

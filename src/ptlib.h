@@ -98,7 +98,7 @@ public:
         do
         {
             const Symbol* token = lexer.GetToken();
-            stepResult = parser.StepParse(token);
+            stepResult = parser.StepParse(grammar, token);
             if (stepResult.requireNextToken)
             {
                 lexer.NextToken();
